@@ -23,7 +23,7 @@ case $1 in
 		exec /opt/zookeeper/bin/zkServer.sh start-foreground
 		;;
 	rancher-cluster)
-		ZKMYDID=$(rancherGet self/container/service_index)
+		ZKMYID=$(rancherGet self/container/service_index)
 		[ "$ZKMYID" = "" ] && echo "Cannot find service index" && exit 1
 		echo $ZKMYID > $DATADIR/myid
 
