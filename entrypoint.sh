@@ -5,17 +5,20 @@ CFG="$ZKDIR/conf/zoo.cfg"
 
 function zooCfg {
 	config="$1=$2"
-	grep "^$1" $CFG > /dev/null && sed -i 's;'$1'=.*$;'$config';' $CFG || echo "$config" >> $CFG 
+	echo "New config : $config"
+	grep "^$1" $CFG > /dev/null \
+		&& sed -i 's;'$1'=.*$;'$config';' $CFG \
+		|| echo "$config" >> $CFG 
 }
 
 function rancherGet {
-	curl http://169.254.169.250/latest/$1
+	curl -s http://169.254.169.250/latest/$1
 }
 
 [ "$DATADIR" = "" ] && DATADIR=/data
+[ "$ZKNODES" = "" ] && ZKNODES=3
 
 mkdir -p $DATADIR
-#sed -i 's:dataDir=.*$:dataDir='$DATADIR':g' $CFG
 zooCfg dataDir "$DATADIR"
 
 case $1 in
@@ -29,6 +32,13 @@ case $1 in
 
 		NAME=$(rancherGet self/container/name| sed 's/-[0-9]*$/-/')
 		echo "my name is $NAME and is $ZKMYID"
+		
+		for i in $(seq 1 $ZKNODES)
+		do
+			zooCfg server.$i $NAME$i:2888:3888
+		done
+		
+		exec /opt/zookeeper/bin/zkServer.sh start-foreground
 		;;
 
 	*)
