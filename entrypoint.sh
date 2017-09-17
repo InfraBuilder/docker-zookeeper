@@ -17,9 +17,13 @@ function rancherGet {
 
 [ "$DATADIR" = "" ] && DATADIR=/data
 [ "$ZKNODES" = "" ] && ZKNODES=3
+[ "$ZK_INIT_LIMIT" = "" ] && ZK_INIT_LIMIT=5
+[ "$ZK_SYNC_LIMIT" = "" ] && ZK_SYNC_LIMIT=3
 
 mkdir -p $DATADIR
 zooCfg dataDir "$DATADIR"
+zooCfg initLimit $ZK_INIT_LIMIT
+zooCfg syncLimit $ZK_SYNC_LIMIT
 
 case $1 in
 	standalone)
@@ -40,7 +44,19 @@ case $1 in
 		
 		exec /opt/zookeeper/bin/zkServer.sh start-foreground
 		;;
-
+	cli)
+		OPT=""
+	
+		if [ "$2" != "" ] 
+		then
+			SERVER="$2"
+			PORT="$3"
+			[ "$PORT" = "" ] && PORT="2181"
+			OPT="-server $SERVER:$PORT"
+		fi
+		
+		exec /opt/zookeeper/bin/zkCli.sh $OPT
+		;;
 	*)
 		exec $@
 		;;
